@@ -41,7 +41,7 @@ export const getSession = async () => {
 
   try {
     const { payload } = await jwtVerify(cookie, encodedKey, {
-      algorithms: ["HS265"],
+      algorithms: ["HS256"],
     });
 
     return payload as Session;
@@ -49,4 +49,8 @@ export const getSession = async () => {
     console.error("Failed to verify the session", error);
     redirect("/auth/signin");
   }
+};
+
+export const deleteSession = async () => {
+  (await cookies()).delete("session");
 };
