@@ -72,6 +72,7 @@ export const signin = async (
         id: result.id,
         name: result.name,
       },
+      accessToken: result.accessToken,
     });
 
     redirect("/");
