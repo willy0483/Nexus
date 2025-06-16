@@ -3,6 +3,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  /* Nexus Color Theme */
+  --color-neon: #00f0ff; /* Vibrant cyan accent */
+  --color-void: #0a0a12; /* Deep space background */
+  --color-matrix: #15151f; /* Surface / card */
+  --color-slate: #1e1e2a; /* Sidebar / panel */
+  --color-wireframe: #2a2a3a; /* Borders / low contrast */
+  --color-hologram: #f0f0ff; /* Light text */
+  --color-alert: #ff3860; /* Error (electric pink-red) */
+  --color-valid: #2de2a5; /* Success (neon green) */
+  --color-static: #7d7d9c; /* Muted text */
+  --color-pulse: #8a7dff; /* Secondary accent (purple-blue) */
+
+  --font-montserrat: var(--font-montserrat);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -68,7 +84,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: #1e1e2a;
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
