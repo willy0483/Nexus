@@ -101,18 +101,7 @@ export const refreshToken = async (oldRefreshToken: string) => {
       throw new Error("Failed to refresh token " + response.statusText);
     }
 
-    const { accessToken, refreshToken } = await response.json();
-
-    // update session with new tokens
-    const updateRes = await fetch("http://localhost:3000/api/auth/update", {
-      method: "POST",
-      body: JSON.stringify({
-        accessToken,
-        refreshToken,
-      }),
-    });
-
-    if (!updateRes.ok) throw new Error("Failed to update the tokens");
+    const { accessToken } = await response.json();
 
     return accessToken;
   } catch (error) {
