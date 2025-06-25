@@ -2,6 +2,8 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { NextRequest, NextResponse } from "next/server";
+import { BACKEND_URL } from "./constants";
 
 export type Session = {
   user: {
@@ -78,4 +80,97 @@ export const updateTokens = async ({
   };
 
   await createSession(newPayload);
+};
+
+export const updateSession = async (request: NextRequest) => {
+  const session = request.cookies.get("session")?.value;
+  if (!session) return;
+
+  try {
+    const { payload } = await jwtVerify<Session>(session, encodedKey, {
+      algorithms: ["HS256"],
+    });
+
+    if (!payload) return;
+
+    let updatedPayload = payload;
+
+    // Test if access token is still valid by calling the protected endpoint
+    try {
+      const protectedResponse = await fetch(`${BACKEND_URL}/auth/protected`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${payload.accessToken}`,
+        },
+      });
+
+      // If access token is invalid (401), refresh it
+      if (protectedResponse.status === 401) {
+        console.log("Access token invalid, refreshing...");
+
+        const refreshResponse = await fetch(`${BACKEND_URL}/auth/refresh`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            refresh: payload.refreshToken,
+          }),
+        });
+
+        if (refreshResponse.ok) {
+          const { accessToken, refreshToken } = await refreshResponse.json();
+          console.log("Tokens refreshed successfully");
+
+          updatedPayload = {
+            ...payload,
+            accessToken,
+            refreshToken,
+          };
+        } else {
+          console.error(
+            "Failed to refresh tokens, response:",
+            refreshResponse.status
+          );
+          const res = NextResponse.redirect(
+            new URL("/auth/signin", request.url)
+          );
+          res.cookies.delete("session");
+          return res;
+        }
+      } else if (protectedResponse.ok) {
+        console.log("Access token is valid");
+        // Token is valid, no need to refresh
+      }
+    } catch (error) {
+      console.error("Token validation failed:", error);
+      // Network error, continue with existing session
+    }
+
+    const newExpiredAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const newSession = await new SignJWT(updatedPayload)
+      .setProtectedHeader({
+        alg: "HS256",
+      })
+      .setIssuedAt()
+      .setExpirationTime(newExpiredAt)
+      .sign(encodedKey);
+
+    const res = NextResponse.next();
+    res.cookies.set("session", newSession, {
+      httpOnly: true,
+      secure: true,
+      expires: newExpiredAt,
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return res;
+  } catch (error) {
+    console.error("Failed to update session", error);
+    const res = NextResponse.redirect(new URL("/auth/signin", request.url));
+    res.cookies.delete("session");
+    return res;
+  }
 };

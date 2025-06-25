@@ -5,7 +5,7 @@ export default async function SessionPage() {
   const session = await getSession();
 
   if (!session || !session.refreshToken) {
-    redirect("/signin");
+    redirect("/auth/signin");
   }
 
   return (
